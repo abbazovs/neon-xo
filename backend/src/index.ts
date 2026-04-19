@@ -1,3 +1,4 @@
+process.stdout.write('🔵 [BOOT] Server process starting...\n');
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

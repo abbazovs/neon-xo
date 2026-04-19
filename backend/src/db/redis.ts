@@ -8,14 +8,16 @@ import { env } from '../config/env.js';
  * - Online presence tracking (user:online set)
  * - Active match state / quick-match queue
  */
+process.stdout.write(`🔵 [BOOT] Connecting to Redis: ${env.REDIS_URL?.slice(0, 30)}...\n`);
+
 export const redis = new Redis(env.REDIS_URL, {
   maxRetriesPerRequest: null,
-  enableReadyCheck: true,
-  lazyConnect: false,
+  enableReadyCheck: false,
+  lazyConnect: true,
 });
 
 // Pub/sub clients for Socket.IO Redis adapter (must be separate connections)
-export const pubClient = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
+export const pubClient = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null, lazyConnect: true });
 export const subClient = pubClient.duplicate();
 
 redis.on('error', (err: Error) => console.error('Redis error:', err));
