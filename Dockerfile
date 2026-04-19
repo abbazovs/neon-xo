@@ -30,6 +30,7 @@ RUN npm --workspace backend run build
 FROM node:20-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+# cache-bust: 20260419-v4
 
 COPY package.json ./
 COPY backend/package.json ./backend/
@@ -38,5 +39,5 @@ RUN npm install --workspace backend --omit=dev --no-audit --no-fund
 
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 
-EXPOSE 3000
-CMD ["sh", "-c", "echo '[CMD] Container started' && node backend/dist/db/migrate.js 2>&1 && echo '[CMD] Migrations done, starting server' && node backend/dist/index.js 2>&1; echo \"[CMD] Server exited code=$?\""]
+EXPOSE 8080
+CMD ["node", "-e", "const fs=require('fs'),http=require('http');const p=parseInt(process.env.PORT||'8080');fs.writeSync(1,'[DIAG] port='+p+' starting\\n');http.createServer((q,r)=>{fs.writeSync(1,'[DIAG] req '+q.url+'\\n');r.writeHead(200);r.end('NEON-XO ALIVE port='+p+'\\n')}).listen(p,'0.0.0.0',()=>fs.writeSync(1,'[DIAG] listening on 0.0.0.0:'+p+'\\n'))"]
