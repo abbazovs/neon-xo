@@ -39,4 +39,4 @@ RUN npm install --workspace backend --omit=dev --no-audit --no-fund
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 
 EXPOSE 3000
-CMD ["sh", "-c", "node backend/dist/db/migrate.js && node backend/dist/index.js 2>&1"]
+CMD ["sh", "-c", "echo '[CMD] Container started' && node backend/dist/db/migrate.js 2>&1 && echo '[CMD] Migrations done, starting server' && node backend/dist/index.js 2>&1; echo \"[CMD] Server exited code=$?\""]
