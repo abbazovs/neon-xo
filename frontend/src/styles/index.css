@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --cyan: #00f0ff;
+  --magenta: #ff2bd1;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Rajdhani', system-ui, sans-serif;
+  background: #05010f;
+  color: #e4e1ff;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scanline + grid background, static */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0, 240, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 43, 209, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 20% 10%, rgba(0, 240, 255, 0.08), transparent 50%),
+    radial-gradient(circle at 80% 90%, rgba(255, 43, 209, 0.08), transparent 50%);
+  background-size: 42px 42px, 42px 42px, 100% 100%, 100% 100%;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02) 0,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 1;
+  mix-blend-mode: overlay;
+}
+
+#root {
+  position: relative;
+  z-index: 2;
+  min-height: 100dvh;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Focus ring - a11y */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Neon text helper */
+.neon-cyan {
+  color: var(--cyan);
+  text-shadow: 0 0 6px var(--cyan), 0 0 14px rgba(0, 240, 255, 0.6);
+}
+.neon-magenta {
+  color: var(--magenta);
+  text-shadow: 0 0 6px var(--magenta), 0 0 14px rgba(255, 43, 209, 0.6);
+}
+
+.font-display {
+  font-family: 'Orbitron', system-ui, sans-serif;
+  letter-spacing: 0.05em;
+}
+
+/* Button base */
+.btn {
+  @apply font-display uppercase tracking-wider text-sm px-5 py-3 rounded-md
+         border transition-all duration-150 active:scale-[0.97]
+         disabled:opacity-40 disabled:cursor-not-allowed;
+}
+.btn-primary {
+  @apply btn text-cyan-neon border-cyan-neon bg-cyan-neon/5
+         hover:bg-cyan-neon/15 hover:shadow-neon-cyan;
+}
+.btn-secondary {
+  @apply btn text-magenta-neon border-magenta-neon bg-magenta-neon/5
+         hover:bg-magenta-neon/15 hover:shadow-neon-magenta;
+}
+.btn-ghost {
+  @apply btn text-ink-dim border-ink-faint/40 hover:text-ink hover:border-ink-dim;
+}
+
+.input {
+  @apply w-full bg-bg-soft/80 border border-ink-faint/40 rounded-md px-4 py-3
+         text-ink placeholder-ink-faint font-body text-base
+         focus:border-cyan-neon focus:shadow-neon-soft outline-none transition;
+}
+
+.card {
+  @apply bg-bg-card backdrop-blur-sm border border-ink-faint/20 rounded-lg p-4;
+}
+
+/* High contrast toggle */
+.high-contrast {
+  --cyan: #66ffff;
+  --magenta: #ff66e0;
+}
+.high-contrast body {
+  color: #ffffff;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

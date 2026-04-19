@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: neonxo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --workspaces --include-workspace-root --no-audit --no-fund
+
+      - name: Type-check backend
+        run: npm --workspace backend run typecheck
+
+      - name: Type-check frontend
+        run: npm --workspace frontend run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run backend tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/neonxo_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test_secret_key_at_least_32_characters_long_xx
+          NODE_ENV: test
+        run: npm --workspace backend run test
+
+      - name: Build frontend
+        run: npm --workspace frontend run build
+
+      - name: Build backend
+        run: npm --workspace backend run build
