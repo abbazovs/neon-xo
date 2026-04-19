@@ -20,6 +20,8 @@ export const subClient = pubClient.duplicate();
 
 redis.on('error', (err: Error) => console.error('Redis error:', err));
 redis.on('connect', () => console.info('✅ Redis connected'));
+pubClient.on('error', (err: Error) => console.error('Redis pubClient error:', err));
+subClient.on('error', (err: Error) => console.error('Redis subClient error:', err));
 
 export async function closeRedis(): Promise<void> {
   await Promise.all([redis.quit(), pubClient.quit(), subClient.quit()]);
