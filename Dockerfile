@@ -34,7 +34,6 @@ ENV NODE_ENV=production
 COPY package.json ./
 COPY backend/package.json ./backend/
 COPY frontend/package.json ./frontend/
-ENV NPM_CONFIG_IGNORE_SCRIPTS=true
 RUN npm install --workspace backend --omit=dev --no-audit --no-fund
 
 COPY --from=backend-builder /app/backend/dist ./backend/dist
