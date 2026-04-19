@@ -27,7 +27,7 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 RUN npm --workspace backend run build
 
 # ---------- Runtime ----------
-FROM node:20-alpine AS runtime
+FROM node:20-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
@@ -39,4 +39,4 @@ RUN npm install --workspace backend --omit=dev --no-audit --no-fund
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 
 EXPOSE 3000
-CMD ["sh", "-c", "node backend/dist/db/migrate.js && node backend/dist/index.js"]
+CMD ["sh", "-c", "node backend/dist/db/migrate.js && node backend/dist/index.js 2>&1"]
