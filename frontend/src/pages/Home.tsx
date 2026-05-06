@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -25,11 +25,12 @@ export const Home: FC = () => {
   const displayName = user?.username ?? guestName;
   const displayAvatar = user?.avatarId ?? guestAvatarId;
 
-  if (!displayName) {
-    // Guest who cleared storage
-    nav('/');
-    return null;
-  }
+  // Guest who cleared storage — bounce to landing. Done in an effect so we
+  // don't navigate during render.
+  useEffect(() => {
+    if (!displayName) nav('/');
+  }, [displayName, nav]);
+  if (!displayName) return null;
 
   const createMatch = () => {
     playSound('click');
@@ -59,6 +60,9 @@ export const Home: FC = () => {
     playSound('click');
     setMode('waitingQuick');
     const socket = getSocket();
+    // Clear any prior listener first — start/cancel/start cycles can otherwise
+    // stack handlers and double-navigate when pairing finally happens.
+    socket.off('quickmatch:paired');
     socket.emit('quickmatch:enqueue', (res: { ok: true } | { ok: false; error: string }) => {
       if (!res.ok) {
         setError(res.error);
@@ -72,6 +76,7 @@ export const Home: FC = () => {
 
   const cancelQuickMatch = () => {
     const socket = getSocket();
+    socket.off('quickmatch:paired');
     socket.emit('quickmatch:cancel');
     setMode('home');
   };

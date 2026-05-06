@@ -8,7 +8,6 @@ interface Props {
   winLine: number[] | null;
   canMove: boolean;
   onMove: (index: number) => void;
-  mySide: 'p1' | 'p2' | null;
 }
 
 /**
@@ -16,7 +15,7 @@ interface Props {
  * Wins are highlighted by drawing a glowing line over the winning cells
  * and pulsing those cells.
  */
-export const Board: FC<Props> = ({ board, size, winLine, canMove, onMove, mySide }) => {
+export const Board: FC<Props> = ({ board, size, winLine, canMove, onMove }) => {
   const gridCols = size === 3 ? 'grid-cols-3' : size === 4 ? 'grid-cols-4' : 'grid-cols-5';
   const cellSize = size === 3 ? 'h-24 md:h-28' : size === 4 ? 'h-16 md:h-24' : 'h-14 md:h-20';
 

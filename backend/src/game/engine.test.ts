@@ -111,6 +111,14 @@ describe('applyMove', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe('out_of_bounds');
   });
+  it('rejects non-integer index (NaN, float, etc.)', () => {
+    const b = createEmptyBoard(3);
+    for (const bad of [NaN, 1.5, Infinity, -Infinity]) {
+      const r = applyMove(b, bad as number, 'X', 'X', 3);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.reason).toBe('out_of_bounds');
+    }
+  });
   it('detects draw', () => {
     const b: (string | null)[] = ['X', 'O', 'X', 'X', 'O', 'O', 'O', 'X', null];
     const r = applyMove(b as never, 8, 'X', 'X', 3);

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { CurrentUser } from '../types';
 import { api } from '../lib/api';
+import { refreshSocketAuth } from '../lib/socket';
 
 interface AuthState {
   user: CurrentUser | null;
@@ -27,6 +28,7 @@ export const useAuth = create<AuthState>((set) => ({
       const { token, user } = await api.login(username, password);
       localStorage.setItem('neon-xo-token', token);
       set({ user, token, loading: false });
+      refreshSocketAuth();
     } catch (err) {
       set({ loading: false, error: (err as Error).message });
       throw err;
@@ -39,6 +41,7 @@ export const useAuth = create<AuthState>((set) => ({
       const { token, user } = await api.register(username, password, avatarId, language);
       localStorage.setItem('neon-xo-token', token);
       set({ user, token, loading: false });
+      refreshSocketAuth();
     } catch (err) {
       set({ loading: false, error: (err as Error).message });
       throw err;
@@ -53,6 +56,7 @@ export const useAuth = create<AuthState>((set) => ({
     }
     localStorage.removeItem('neon-xo-token');
     set({ user: null, token: null });
+    refreshSocketAuth();
   },
 
   async refresh() {
@@ -67,6 +71,7 @@ export const useAuth = create<AuthState>((set) => ({
     } catch {
       localStorage.removeItem('neon-xo-token');
       set({ user: null, token: null, loading: false });
+      refreshSocketAuth();
     }
   },
 

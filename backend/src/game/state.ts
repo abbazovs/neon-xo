@@ -156,3 +156,14 @@ export async function dequeueQuickMatchPair(): Promise<
 export async function removeFromQuickQueue(userId: string, socketId: string): Promise<void> {
   await redis.zrem(QUICK_QUEUE, `${userId}:${socketId}`);
 }
+
+/**
+ * Drop every queue entry belonging to a user, regardless of socket id.
+ * Used to dedupe the queue when a user enqueues again from a new socket
+ * (e.g. quick reconnect or repeated tap).
+ */
+export async function removeUserFromQuickQueue(userId: string): Promise<void> {
+  const entries = await redis.zrange(QUICK_QUEUE, 0, -1);
+  const matches = entries.filter((e) => e.startsWith(`${userId}:`));
+  if (matches.length > 0) await redis.zrem(QUICK_QUEUE, ...matches);
+}

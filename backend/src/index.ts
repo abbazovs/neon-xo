@@ -79,9 +79,11 @@ app.use('/api/friends', friendsRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/matches', matchesRouter);
 
-// Serve built frontend (only in production)
+// Serve built frontend (only in production). copy-frontend.js writes the
+// built SPA into backend/dist/public, which sits alongside the running
+// index.js (so __dirname/public resolves correctly).
 if (isProduction) {
-  const frontendDist = path.resolve(__dirname, '../public');
+  const frontendDist = path.resolve(__dirname, 'public');
   app.use(express.static(frontendDist, { maxAge: '1h', index: false }));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(frontendDist, 'index.html'));

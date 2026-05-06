@@ -1,5 +1,5 @@
 import { useEffect, useState, type FC } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './store/auth';
@@ -15,7 +15,7 @@ import { Friends, Rank, Me, AcceptFriendInvite, ErrorPage } from './pages/Accoun
 import { Logo } from './components/Logo';
 
 export const App: FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { languageChosen, setLanguageChosen, highContrast, guestName } = usePrefs();
   const { user, loading, refresh, logout } = useAuth();
   const [duplicateSession, setDuplicateSession] = useState(false);
@@ -41,13 +41,6 @@ export const App: FC = () => {
     const stored = localStorage.getItem('neon-xo-lang');
     if (stored && !languageChosen) setLanguageChosen(true);
   }, [languageChosen, setLanguageChosen]);
-
-  // Apply server-side language when user refreshes
-  useEffect(() => {
-    if (user && user) {
-      // no-op; server has language preference tied to localStorage
-    }
-  }, [user]);
 
   // Socket lifecycle events
   useEffect(() => {
@@ -207,8 +200,3 @@ export const App: FC = () => {
     </>
   );
 };
-
-// Helper hook to get current path (unused but exported for future)
-export function useCurrentPath(): string {
-  return useLocation().pathname;
-}

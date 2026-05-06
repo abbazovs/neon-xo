@@ -41,9 +41,14 @@ export const Match: FC = () => {
   const [disconnectMessage, setDisconnectMessage] = useState<string | null>(null);
 
   const emojiKeyRef = useRef(0);
+  // Socket listeners are registered once per match code; capture the latest
+  // mySide via a ref so closures (win/lose audio, emoji side) see the updated value.
+  const mySideRef = useRef<'p1' | 'p2' | null>(null);
+  useEffect(() => {
+    mySideRef.current = mySide;
+  }, [mySide]);
 
   const shareUrl = `${window.location.origin}/match/${code}`;
-  const inMatch = state !== null;
   const isMyTurn =
     state?.status === 'active' &&
     ((mySide === 'p1' && state.turn === 'X') || (mySide === 'p2' && state.turn === 'O'));
@@ -52,35 +57,39 @@ export const Match: FC = () => {
   useEffect(() => {
     const socket = getSocket();
 
-    const joinPayload: { code: string; guestName?: string; guestAvatarId?: number } = { code };
-    if (!user) {
-      joinPayload.guestName = guestName || 'Guest';
-      joinPayload.guestAvatarId = guestAvatarId;
-    }
-
-    socket.emit(
-      'match:join',
-      joinPayload,
-      (
-        res:
-          | { ok: true; side: 'p1' | 'p2'; state: PublicMatchState }
-          | { ok: false; error: string },
-      ) => {
-        if (res.ok) {
-          setState(res.state);
-          setMySide(res.side);
-        } else {
-          setError(res.error);
-        }
-      },
-    );
+    const join = () => {
+      const joinPayload: { code: string; guestName?: string; guestAvatarId?: number } = { code };
+      if (!user) {
+        joinPayload.guestName = guestName || 'Guest';
+        joinPayload.guestAvatarId = guestAvatarId;
+      }
+      socket.emit(
+        'match:join',
+        joinPayload,
+        (
+          res:
+            | { ok: true; side: 'p1' | 'p2'; state: PublicMatchState }
+            | { ok: false; error: string },
+        ) => {
+          if (res.ok) {
+            setState(res.state);
+            setMySide(res.side);
+          } else {
+            setError(res.error);
+          }
+        },
+      );
+    };
+    join();
 
     const onState = (s: PublicMatchState) => {
       setState(s);
-      // Clear rematch offers on new state after round reset
       if (s.status === 'coin_flip') {
         setShowWinLine(null);
         setCoinResult(null);
+        // A new round/series — clear any prior rematch UI state
+        setRematchOfferedBy(null);
+        setIOfferedRematch(false);
       }
     };
     const onMove = ({ state: s }: { state: PublicMatchState }) => {
@@ -105,8 +114,9 @@ export const Match: FC = () => {
     }) => {
       setState(s);
       setShowWinLine(winLine);
+      const me = mySideRef.current;
       if (draw) playSound('draw');
-      else if (winnerSide === mySide) {
+      else if (winnerSide === me) {
         playSound('win');
         vibrate([60, 40, 60]);
       } else {
@@ -125,16 +135,22 @@ export const Match: FC = () => {
       if (reason === 'disconnect') setDisconnectMessage(t('match.opponentLeft'));
     };
     const onEmoji = ({ by, emoji }: { by: 'p1' | 'p2'; emoji: string }) => {
-      const side = by === mySide ? 'left' : 'right';
+      const side = by === mySideRef.current ? 'left' : 'right';
       emojiKeyRef.current++;
       setFloatingEmoji({ side, emoji, key: emojiKeyRef.current });
       setTimeout(() => setFloatingEmoji(null), 2000);
     };
     const onRematchOffered = ({ by }: { by: 'p1' | 'p2' }) => {
+      // Server broadcasts to the room (including the offerer); ignore your own.
+      if (by === mySideRef.current) return;
       setRematchOfferedBy(by);
     };
 
-    const onConnect = () => setConnected(true);
+    const onConnect = () => {
+      setConnected(true);
+      // After a reconnect, re-join the room so we keep getting state events.
+      join();
+    };
     const onDisconnect = () => setConnected(false);
 
     socket.on('match:state', onState);
@@ -161,13 +177,8 @@ export const Match: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
-  // Handle entering coin_flip phase — P1 auto-triggers
-  useEffect(() => {
-    if (state?.status === 'coin_flip' && mySide === 'p1' && !coinResult) {
-      const socket = getSocket();
-      socket.emit('match:coinFlip', { code }, () => {});
-    }
-  }, [state?.status, mySide, coinResult, code]);
+  // Coin flip is server-driven — the client just shows the animation while
+  // waiting for `match:coinFlipResult`.
 
   // Move deadline timer display
   useEffect(() => {
@@ -351,7 +362,6 @@ export const Match: FC = () => {
           winLine={showWinLine}
           canMove={isMyTurn}
           onMove={doMove}
-          mySide={mySide}
         />
       </div>
 
@@ -417,7 +427,7 @@ export const Match: FC = () => {
               {disconnectMessage && (
                 <p className="text-ink-dim mb-4 font-body">{disconnectMessage}</p>
               )}
-              {state.endReason === 'surrender' && !youWon === false && (
+              {state.endReason === 'surrender' && youWon && (
                 <p className="text-ink-dim mb-4 font-body">{t('match.reasonSurrender')}</p>
               )}
               {state.endReason === 'timeout' && (

@@ -102,10 +102,12 @@ export async function deleteUser(userId: string): Promise<void> {
 }
 
 export async function searchUsers(qstr: string, excludeUserId: string, limit = 10): Promise<UserRow[]> {
-  const like = qstr.toLowerCase() + '%';
+  // Escape LIKE metacharacters so user input can't widen the match (a_min, b%, etc.)
+  const escaped = qstr.toLowerCase().replace(/\\/g, '\\\\').replace(/[%_]/g, '\\$&');
+  const like = escaped + '%';
   const r = await query<UserRow>(
     `SELECT * FROM users
-     WHERE username_lower LIKE $1 AND id <> $2
+     WHERE username_lower LIKE $1 ESCAPE '\\' AND id <> $2
      ORDER BY username_lower LIMIT $3`,
     [like, excludeUserId, limit],
   );

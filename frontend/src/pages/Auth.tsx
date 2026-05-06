@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { Logo } from '../components/Logo';
 import { Avatar } from '../components/Avatar';
 import { useAuth } from '../store/auth';
-import { refreshSocketAuth } from '../lib/socket';
 import { playSound } from '../lib/sound';
 
 export const Login: FC = () => {
@@ -24,7 +23,6 @@ export const Login: FC = () => {
     setBusy(true);
     try {
       await login(username, password);
-      refreshSocketAuth();
       playSound('notify');
       nav('/app');
     } catch (err) {
@@ -101,7 +99,6 @@ export const Register: FC = () => {
     setBusy(true);
     try {
       await register(username, password, avatarId, i18n.language);
-      refreshSocketAuth();
       playSound('notify');
       nav('/app');
     } catch (err) {

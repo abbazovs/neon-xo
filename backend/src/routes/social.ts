@@ -1,14 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import {
-  searchUsers,
-  findUserById,
-  findUserByUsername,
-  toPublicUser,
-} from '../db/users.js';
+import { searchUsers, findUserById } from '../db/users.js';
 import {
   addFriendship,
-  areFriends,
   createFriendInvite,
   deleteFriendInvite,
   findFriendInvite,

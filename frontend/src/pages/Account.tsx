@@ -10,7 +10,6 @@ import { Avatar } from '../components/Avatar';
 import { ShareSheet } from '../components/Effects';
 import { playSound } from '../lib/sound';
 import type {
-  CurrentUser,
   FriendEntry,
   LeaderboardEntry,
   MatchHistoryEntry,

@@ -97,7 +97,8 @@ export function applyMove(
   size: BoardSize,
 ): MoveResult {
   if (player !== currentTurn) return { ok: false, reason: 'not_your_turn' };
-  if (index < 0 || index >= size * size) return { ok: false, reason: 'out_of_bounds' };
+  if (!Number.isInteger(index) || index < 0 || index >= size * size)
+    return { ok: false, reason: 'out_of_bounds' };
   if (board[index] !== null) return { ok: false, reason: 'cell_occupied' };
 
   const next = board.slice();

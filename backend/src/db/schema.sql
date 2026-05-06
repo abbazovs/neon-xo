@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS users (
   longest_streak INT NOT NULL DEFAULT 0
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_username_lower ON users(username_lower);
 CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen_at DESC);
 
 -- Leaderboard view (win rate, 25+ games minimum)
@@ -75,7 +74,7 @@ CREATE TABLE IF NOT EXISTS matches (
   board_size       SMALLINT NOT NULL DEFAULT 3,
   format           VARCHAR(10) NOT NULL DEFAULT 'single', -- single | bo3 | bo5
   timer_seconds    SMALLINT NOT NULL DEFAULT 0,           -- 0 = no timer
-  status           VARCHAR(20) NOT NULL DEFAULT 'waiting', -- waiting | active | finished | abandoned | voided
+  status           VARCHAR(20) NOT NULL DEFAULT 'waiting', -- waiting | coin_flip | active | finished | abandoned | voided
   winner_user_id   UUID REFERENCES users(id) ON DELETE SET NULL,
   result           VARCHAR(20),                            -- p1_win | p2_win | draw | abandoned
   end_reason       VARCHAR(30),                            -- normal | surrender | disconnect | timeout | both_disconnect
