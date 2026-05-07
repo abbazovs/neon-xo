@@ -42,4 +42,4 @@ RUN npm install --workspace backend --omit=dev --no-audit --no-fund
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 
 EXPOSE 3000
-CMD ["sh", "-c", "node backend/dist/db/migrate.js && node backend/dist/index.js"]
+CMD ["node", "backend/dist/start.js"]

@@ -18,20 +18,33 @@ function findSchema(): string {
   throw new Error(`schema.sql not found. Tried: ${candidates.join(', ')}`);
 }
 
-async function migrate(): Promise<void> {
+/**
+ * Runs the schema against the connection pool. Idempotent (CREATE … IF NOT EXISTS).
+ * Does NOT close the pool — callers reuse it for the live app.
+ */
+export async function runMigrations(): Promise<void> {
   const schemaPath = findSchema();
   const schema = readFileSync(schemaPath, 'utf-8');
-
   console.info('Running database migrations from', schemaPath);
-  try {
-    await pool.query(schema);
-    console.info('✅ Migrations applied successfully');
-  } catch (err) {
-    console.error('❌ Migration failed:', err);
-    process.exit(1);
-  } finally {
-    await closePool();
-  }
+  await pool.query(schema);
+  console.info('✅ Migrations applied successfully');
 }
 
-migrate();
+// CLI mode: only when the file is invoked directly via `node migrate.js`.
+// Imports (e.g. from start.ts) skip this and call runMigrations() themselves.
+const isCliInvocation =
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('migrate.js');
+
+if (isCliInvocation) {
+  (async () => {
+    try {
+      await runMigrations();
+    } catch (err) {
+      console.error('❌ Migration failed:', err);
+      process.exit(1);
+    } finally {
+      await closePool();
+    }
+  })();
+}

@@ -1,8 +1,9 @@
-// Diagnostic bootstrap wrapper.
-// Logs env state and import progress to stderr (unbuffered, so output
-// reaches the deploy log even if the process crashes during import).
-// If index.js throws during static import or top-level evaluation,
-// the catch reports it instead of dying silently.
+// Single-process bootstrap: env diagnostics → run migrations → load the
+// server. Replaces the brittle "node migrate.js && node index.js" chain
+// because Railway's startCommand handling drops the && step.
+//
+// Logs go to stderr via writeSync — synchronous, line-flushed, reaches
+// the deploy log even on abrupt exit.
 
 import { writeSync } from 'node:fs';
 
@@ -30,8 +31,17 @@ process.on('unhandledRejection', (reason) => {
   writeSync(2, `[start] unhandledRejection: ${String(reason)}\n`);
 });
 
-writeSync(2, `[start] importing index.js...\n`);
+writeSync(2, `[start] running migrations...\n`);
+try {
+  const { runMigrations } = await import('./db/migrate.js');
+  await runMigrations();
+  writeSync(2, `[start] migrations OK\n`);
+} catch (err) {
+  writeSync(2, `[start] migrations FAILED: ${(err as Error)?.stack ?? String(err)}\n`);
+  process.exit(1);
+}
 
+writeSync(2, `[start] importing index.js (server bootstrap)...\n`);
 try {
   await import('./index.js');
   writeSync(2, `[start] index.js evaluated; server should now be listening\n`);
