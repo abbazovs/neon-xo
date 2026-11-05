@@ -1,0 +1,6 @@
+server {
+    listen ${PORT};
+    root /usr/share/nginx/html;
+    index index.html;
+    location ~* \.mp4$ { add_header Accept-Ranges bytes; add_header Cache-Control "public, max-age=86400"; }
+}
